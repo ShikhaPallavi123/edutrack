@@ -2,40 +2,39 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-// get all notes
 router.get('/', (req, res) => {
-  const notes = db.prepare(`
-    SELECT n.*, s.name as staff_name
-    FROM notes n
-    LEFT JOIN staff s ON n.staff_id = s.id
-    ORDER BY n.created_at DESC
-  `).all();
-  res.json(notes);
+  db.all(`SELECT n.*, s.name as staff_name FROM notes n
+    LEFT JOIN staff s ON n.staff_id = s.id ORDER BY n.created_at DESC`, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 });
 
-// create note
 router.post('/', (req, res) => {
   const { staff_id, title, content, note_type, tags } = req.body;
-  const result = db.prepare(`
-    INSERT INTO notes (staff_id, title, content, note_type, tags)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(staff_id, title, content, note_type, tags);
-  res.json({ id: result.lastInsertRowid, message: 'Note saved' });
+  db.run(`INSERT INTO notes (staff_id,title,content,note_type,tags) VALUES (?,?,?,?,?)`,
+    [staff_id, title, content, note_type, tags],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, message: 'Note saved' });
+    });
 });
 
-// update note
 router.put('/:id', (req, res) => {
   const { title, content, note_type, tags } = req.body;
-  db.prepare(`
-    UPDATE notes SET title=?, content=?, note_type=?, tags=? WHERE id=?
-  `).run(title, content, note_type, tags, req.params.id);
-  res.json({ message: 'Note updated' });
+  db.run(`UPDATE notes SET title=?,content=?,note_type=?,tags=? WHERE id=?`,
+    [title, content, note_type, tags, req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Updated' });
+    });
 });
 
-// delete note
 router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM notes WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Note deleted' });
+  db.run('DELETE FROM notes WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Deleted' });
+  });
 });
 
 module.exports = router;
