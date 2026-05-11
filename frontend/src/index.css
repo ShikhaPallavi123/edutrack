@@ -1,0 +1,4 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: #F7F6F2; color: #1A1917; font-size: 14px; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #CBC7C0; border-radius: 10px; }
